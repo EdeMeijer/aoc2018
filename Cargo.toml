@@ -5,3 +5,4 @@ authors = ["Ede Meijer <ede.meijer88@gmail.com>"]
 
 [dependencies]
 maplit = "1.0.1"
+regex = "1.1.0"
