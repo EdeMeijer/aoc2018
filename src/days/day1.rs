@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use utils::load_data;
-use utils::non_empty_lines;
+use utils::data::load_data;
+use utils::data::non_empty_lines;
 
 #[allow(dead_code)]
 pub fn part1() {
