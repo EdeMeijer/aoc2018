@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/2
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -59,6 +60,7 @@ fn solve_part2(box_ids: Vec<String>) -> String {
     panic!("Did not find any matching IDs")
 }
 
+/// Count the occurrences of every distinct character in a string
 fn count_letters(id: String) -> HashMap<char, u32> {
     let mut counts = HashMap::new();
     for letter in id.chars() {

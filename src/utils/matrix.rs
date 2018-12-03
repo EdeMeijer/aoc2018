@@ -1,3 +1,6 @@
+//! Simple 2d Matrix helper that stores data in a contiguous vector and is accessed with (row, col)
+//! tuples.
+
 use std::fmt::Debug;
 use std::fmt::Error;
 use std::fmt::Formatter;
@@ -11,6 +14,7 @@ pub struct Matrix<T> {
 }
 
 impl<T> Matrix<T> where T: Copy {
+    /// Create a new matrix of a custom shape and fill it with an initial value
     pub fn new(height: usize, width: usize, initial: T) -> Matrix<T> {
         Matrix {
             buf: vec![initial; width * height],
@@ -34,6 +38,7 @@ impl<T> IndexMut<(usize, usize)> for Matrix<T> {
     }
 }
 
+/// Custom Debug trait that prints the 2d matrix over multiple lines
 impl<T> Debug for Matrix<T> where T: Debug {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         write!(f, "[")?;
@@ -58,7 +63,7 @@ impl<T> Debug for Matrix<T> where T: Debug {
 #[cfg(test)]
 mod test {
     use super::*;
-    
+
     #[test]
     fn test_matrix() {
         let mut m = Matrix::new(3, 4, 0.0);

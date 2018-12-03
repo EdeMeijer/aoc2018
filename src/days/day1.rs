@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/1
 use std::collections::HashSet;
 
 use utils::data::load_data;
@@ -14,6 +15,7 @@ pub fn part2() {
 }
 
 fn solve_part1(changes: Vec<i32>) -> i32 {
+    // Just sum all the changes together to get the final frequency
     changes.into_iter().sum()
 }
 

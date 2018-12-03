@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/3
 use std::collections::HashSet;
 
 use regex::Regex;
@@ -16,6 +17,7 @@ pub fn part2() {
     println!("{}", solve_combined(get_puzzle_input()).1);
 }
 
+/// Claim represents an area of a bigger canvas defined by it's left/top offset and width/height
 #[derive(Debug, Eq, PartialEq)]
 struct Claim {
     id: u32,
@@ -30,6 +32,11 @@ impl Claim {
         Claim { id, left, top, width, height }
     }
 
+    /// Parse the puzzle input representation of a claim into a Claim object
+    /// e.g. parse
+    ///     #758 @ 738,834: 21x13
+    /// Into
+    ///     Claim { id: 758, left: 738, top: 834, width: 21, height: 13 }
     fn parse(repr: String) -> Claim {
         let re = Regex::new(r"^#(\d+) @ (\d+),(\d+): (\d+)x(\d+)$").unwrap();
         let cap = re.captures(&repr).unwrap();
@@ -43,7 +50,6 @@ impl Claim {
         )
     }
 }
-
 
 fn solve_combined(claims: Vec<Claim>) -> (u32, u32) {
     // Use a single signed integer to represent the state of the claims.
@@ -63,13 +69,17 @@ fn solve_combined(claims: Vec<Claim>) -> (u32, u32) {
                 match cur {
                     // Empty cell, assign it to the current claim
                     0 => state[idx] = claim.id as i32,
-                    // Had a single claim, but now there's more. This means that both the previous
-                    // claim and the current one have issues and are not the result
+                    // Has one or multiple claims
                     _ => {
                         if cur > 0 {
+                            // Before the current claim, the cell was validly assigned to a single
+                            // different claim. Add that claim ID to the set of conflicting IDs and
+                            // mark the cell as conflicting (only the first time).
                             conflicting_ids.insert(cur as u32);
                             conflicting_cells += 1;
                         }
+                        // In any case, the new claim is also conflicting. Add it to the set of 
+                        // conflicting IDs and mark the cell as conflicting.
                         conflicting_ids.insert(claim.id);
                         state[idx] = -1
                     }
