@@ -11,7 +11,7 @@ All my puzzle input is included. Example inputs provided by the puzzles are used
 - Have Rust toolchain installed (https://rustup.rs/)
 - Clone code (`git clone git@github.com:EdeMeijer/aoc2018.git`)
 - In `main.rs`, uncomment the puzzle you want to run the solution for
-- Run it with `cargo run`
+- Run it with `cargo run --release`
 
 ## License
 
