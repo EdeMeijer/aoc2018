@@ -9,6 +9,11 @@ pub fn part1() {
     println!("{}", solve_part1(get_puzzle_input()));
 }
 
+#[allow(dead_code)]
+pub fn part2() {
+    println!("{}", solve_part2(get_puzzle_input()));
+}
+
 fn solve_part1(box_ids: Vec<String>) -> u32 {
     // Track how many times different kinds of multiples occur in box IDs
     let mut multiple_counts = HashMap::new();
@@ -31,6 +36,27 @@ fn solve_part1(box_ids: Vec<String>) -> u32 {
         (Some(a), Some(b)) => a * b,
         _ => 0
     }
+}
+
+fn solve_part2(box_ids: Vec<String>) -> String {
+    for a in box_ids.iter() {
+        for b in box_ids.iter() {
+            // Count how many character positions have different letters
+            let delta: u32 = a.chars().zip(b.chars())
+                .map(|(ca, cb)| (ca != cb) as u32)
+                .sum();
+
+            if delta == 1 {
+                // Return the characters that are the same at their respective positions
+                return a.chars().zip(b.chars())
+                    .filter(|(ca, cb)| ca == cb)
+                    .map(|(ca, _)| ca)
+                    .collect();
+            }
+        }
+    }
+
+    panic!("Did not find any matching IDs")
 }
 
 fn count_letters(id: String) -> HashMap<char, u32> {
@@ -75,6 +101,22 @@ mod test {
                 String::from("ababab"),
             ]),
             12
+        )
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(
+            solve_part2(vec![
+                String::from("abcde"),
+                String::from("fghij"),
+                String::from("klmno"),
+                String::from("pqrst"),
+                String::from("fguij"),
+                String::from("axcye"),
+                String::from("wvxyz"),
+            ]),
+            String::from("fgij")
         )
     }
 }
