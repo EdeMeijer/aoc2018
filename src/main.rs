@@ -2,6 +2,7 @@
 #[cfg(test)]
 extern crate maplit;
 extern crate regex;
+extern crate chrono;
 
 use days::*;
 
@@ -15,4 +16,5 @@ fn main() {
 //    day2::part2();
 //    day3::part1();
 //    day3::part2();
+    day4::part1();
 }

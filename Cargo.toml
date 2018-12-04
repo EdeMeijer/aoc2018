@@ -5,6 +5,7 @@ authors = ["Ede Meijer <ede.meijer88@gmail.com>"]
 
 [dependencies]
 regex = "1.1.0"
+chrono = "0.4.6"
 
 [dev-dependencies]
 maplit = "1.0.1"
