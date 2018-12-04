@@ -17,6 +17,11 @@ pub fn part1() {
     println!("{}", solve_part1(get_puzzle_input()));
 }
 
+#[allow(dead_code)]
+pub fn part2() {
+    println!("{}", solve_part2(get_puzzle_input()));
+}
+
 #[derive(Debug, Eq, PartialEq)]
 struct DateEvent {
     date: Date,
@@ -38,19 +43,42 @@ fn solve_part1(events: Vec<DateEvent>) -> u32 {
         .unwrap()
         .0;
 
-    let sleeps = &spg[guard_with_most_sleeps];
-
-    let mut count_per_minute = HashMap::new();
-    for date in sleeps {
-        *count_per_minute.entry(date.minute()).or_insert(0) += 1;
-    }
-
-    let most_likely_minute = count_per_minute.iter()
+    let most_likely_minute = *count_sleep_minutes(&spg[guard_with_most_sleeps]).iter()
         .max_by_key(|(_, c)| *c)
         .unwrap()
         .0;
 
-    return guard_with_most_sleeps * most_likely_minute;
+    guard_with_most_sleeps * most_likely_minute
+}
+
+fn solve_part2(events: Vec<DateEvent>) -> u32 {
+    let spg = get_sleeps_per_guard(events);
+
+    let mut best = (0, 0);
+    let mut max = 0;
+
+    for (guard, sleeps) in spg {
+        let sleep_minutes = count_sleep_minutes(&sleeps);
+        let (minute, count) = sleep_minutes.iter()
+            .max_by_key(|(_, c)| *c)
+            .unwrap();
+
+        if *count > max {
+            max = *count;
+            best = (guard, *minute);
+        }
+    }
+
+    best.0 * best.1
+}
+
+/// Count the number of times a relative minute between 00:00 and 01:00 occurs in a set of dates
+fn count_sleep_minutes(dates: &Vec<Date>) -> HashMap<u32, u32> {
+    let mut count_per_minute = HashMap::new();
+    for date in dates.iter() {
+        *count_per_minute.entry(date.minute()).or_insert(0) += 1;
+    }
+    count_per_minute
 }
 
 
@@ -170,6 +198,21 @@ mod test {
 
     #[test]
     fn test_part1() {
+        assert_eq!(
+            solve_part1(get_test_input()),
+            240
+        )
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(
+            solve_part2(get_test_input()),
+            4455
+        )
+    }
+    
+    fn get_test_input() -> Vec<DateEvent> {
         let raw_input = "[1518-11-01 00:00] Guard #10 begins shift
 [1518-11-01 00:05] falls asleep
 [1518-11-01 00:25] wakes up
@@ -188,11 +231,6 @@ mod test {
 [1518-11-05 00:45] falls asleep
 [1518-11-05 00:55] wakes up";
 
-        let input = parse_puzzle_input(raw_input.to_owned());
-
-        assert_eq!(
-            solve_part1(input),
-            240
-        )
+        parse_puzzle_input(raw_input.to_owned())
     }
 }
