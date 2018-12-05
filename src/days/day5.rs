@@ -29,7 +29,7 @@ fn solve_part2(units: Vec<Unit>) -> u32 {
     // Create polymers by removing one type, reduce them and pick the shortest length
     unique_types.into_iter()
         .map(|t| units.clone().into_iter().filter(|u| u.0 != t).collect::<Vec<_>>())
-        .map(|p| reduce(p).len())
+        .map(solve_part1)
         .min().unwrap() as u32
 }
 
