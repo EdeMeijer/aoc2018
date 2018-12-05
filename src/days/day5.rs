@@ -38,7 +38,7 @@ fn reduce(mut units: Vec<Unit>) -> Vec<Unit> {
     loop {
         let prior_len = units.len();
         units = reduce_pass(units);
-        if units.len() == prev_len {
+        if units.len() == prior_len {
             break units;
         }
     }
