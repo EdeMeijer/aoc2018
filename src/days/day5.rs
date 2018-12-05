@@ -14,13 +14,13 @@ pub fn part2() {
 }
 
 pub fn time_both_parts() {
-    let input =  load_data("day5");
+    let input_str =  load_data("day5");
+    let input = parse_puzzle_input(input_str);
 
     let start = Instant::now();
-    let input = parse_puzzle_input(input);
-
-    println!("{}", solve_part1(&input));
-    println!("{}", solve_part2(&input));
+    
+    solve_part1(&input);
+    solve_part2(&input);
 
     let elapsed = start.elapsed();
     println!("{:?}", elapsed);
@@ -47,38 +47,18 @@ fn solve_part2(units: &Vec<Unit>) -> u32 {
 }
 
 fn reduce(units: &Vec<Unit>, ignore: Option<char>) -> u32 {
-    let num_units = units.len();
-
-    let mut skip_map = vec![0i32; units.len()];
-    let mut reactions = 0;
-
-    for (i, cur) in units.iter().enumerate().skip(1) {
-        let mut lookback = 0;
-        if Some(cur.0) == ignore {
-            lookback = 1;
-            reactions += 1;
-        } else {
-            let prev_i = i as i32 - 1 - skip_map[i - 1];
-            if prev_i >= 0 {
-                let prev_i = prev_i as usize;
-                let prev = &units[prev_i];
-                if cur.0 == prev.0 && cur.1 != prev.1 {
-                    lookback = 1 + (i - prev_i) as i32;
-                    reactions += 2;
-                }
-            }
+    let mut stack = Vec::with_capacity(units.len());
+    for unit in units {
+        if Some(unit.0) == ignore {
+            continue;
         }
-        
-        if lookback > 0 {
-            let lookback_i = i as i32 - lookback;
-            if lookback_i >= 0 {
-                lookback += skip_map[lookback_i as usize];
-            }
-            skip_map[i] = lookback;
+        if stack.last().map_or(false, |top| does_react(unit, top)) {
+            stack.pop();
+        } else {
+            stack.push(unit.clone());
         }
     }
-
-    (num_units - reactions) as u32
+    stack.len() as u32
 }
 
 fn does_react(a: &Unit, b: &Unit) -> bool {
@@ -102,7 +82,7 @@ mod test {
     #[test]
     fn test_part1() {
         assert_eq!(
-            solve_part1(parse_puzzle_input(String::from("  dabAcCaCBAcCcaDA  "))),
+            solve_part1(&parse_puzzle_input(String::from("  dabAcCaCBAcCcaDA  "))),
             10
         )
     }
@@ -110,7 +90,7 @@ mod test {
     #[test]
     fn test_part2() {
         assert_eq!(
-            solve_part2(parse_puzzle_input(String::from("dabAcCaCBAcCcaDA"))),
+            solve_part2(&parse_puzzle_input(String::from("dabAcCaCBAcCcaDA"))),
             4
         )
     }
