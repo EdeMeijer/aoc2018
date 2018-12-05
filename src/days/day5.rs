@@ -34,15 +34,13 @@ fn solve_part2(units: Vec<Unit>) -> u32 {
 }
 
 /// Repeatedly apply reduction until the input stops changing
-fn reduce(units: Vec<Unit>) -> Vec<Unit> {
-    let input_len = units.len();
-    let reduced = reduce_pass(units);
-    if input_len == reduced.len() {
-        // Nothing changed, so the polymer is now stable
-        reduced
-    } else {
-        // Keep reducing while things are changing
-        reduce(reduced)
+fn reduce(mut units: Vec<Unit>) -> Vec<Unit> {
+    loop {
+        let prior_len = units.len();
+        units = reduce_pass(units);
+        if units.len() == prev_len {
+            break units;
+        }
     }
 }
 
