@@ -17,7 +17,7 @@ pub fn part2() {
 struct Unit(char, bool);
 
 fn solve_part1(units: Vec<Unit>) -> u32 {
-    reduce(units).len() as u32
+    reduce(units)
 }
 
 fn solve_part2(units: Vec<Unit>) -> u32 {
@@ -29,37 +29,34 @@ fn solve_part2(units: Vec<Unit>) -> u32 {
     // Create polymers by removing one type, reduce them and pick the shortest length
     unique_types.into_iter()
         .map(|t| units.clone().into_iter().filter(|u| u.0 != t).collect::<Vec<_>>())
-        .map(solve_part1)
+        .map(reduce)
         .min().unwrap() as u32
 }
 
-/// Repeatedly apply reduction until the input stops changing
-fn reduce(mut units: Vec<Unit>) -> Vec<Unit> {
-    loop {
-        let prior_len = units.len();
-        units = reduce_pass(units);
-        if units.len() == prior_len {
-            break units;
-        }
-    }
-}
+fn reduce(units: Vec<Unit>) -> u32 {
+    let num_units = units.len();
 
-/// A single pass over a polymer reducing reacting pairs
-fn reduce_pass(units: Vec<Unit>) -> Vec<Unit> {
-    let mut result = vec![];
-    let mut iter = units.into_iter().peekable();
+    let mut lookback_map = vec![0i32; units.len()];
+    let mut reactions = 0;
 
-    while let Some(unit) = iter.next() {
-        let reacts = iter.peek().map_or(false, |n| does_react(n, &unit));
-        if reacts {
-            // Consume the next element to finish the reaction
-            iter.next();
-        } else {
-            result.push(unit);
+    for (i, cur) in units.iter().enumerate().skip(1) {
+        let prev_i = i as i32 - 1 - lookback_map[i - 1];
+        if prev_i >= 0 {
+            let prev_i = prev_i as usize;
+            let prev = &units[prev_i];
+            if cur.0 == prev.0 && cur.1 != prev.1 {
+                let mut lookback = 1 + (i - prev_i) as i32;
+                let lookback_i = i as i32 - lookback;
+                if lookback_i >= 0 {
+                    lookback += lookback_map[lookback_i as usize];
+                }
+                lookback_map[i] = lookback;
+                reactions += 1;
+            }
         }
     }
 
-    result
+    (num_units - reactions * 2) as u32
 }
 
 fn does_react(a: &Unit, b: &Unit) -> bool {
