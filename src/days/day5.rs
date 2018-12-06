@@ -35,12 +35,10 @@ fn solve_part1(units: &Vec<Unit>) -> u32 {
 }
 
 fn solve_part2(units: &Vec<Unit>) -> u32 {
-    // Create a list of all occurring unit types
     let unique_types: HashSet<char> = units.iter()
         .map(|u| u.0)
         .collect();
 
-    // Create polymers by removing one type, reduce them and pick the shortest length
     unique_types.into_iter()
         .map(|t| reduce(units, Some(t)))
         .min().unwrap() as u32
