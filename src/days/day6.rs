@@ -10,22 +10,7 @@ pub fn part1() {
 }
 
 fn solve_part1(coords: Coords) -> u32 {
-    let xs: Vec<_> = coords.iter().map(|c| c.0 as i32).collect();
-    let ys: Vec<_> = coords.iter().map(|c| c.1 as i32).collect();
-
-    let mut min_x = *xs.iter().min().unwrap();
-    let mut max_x = *xs.iter().max().unwrap();
-    let mut min_y = *ys.iter().min().unwrap();
-    let mut max_y = *ys.iter().max().unwrap();
-
-    // Use the initial height and width as extra margins around the area to account for infinity
-    let init_width = max_x - min_x + 1;
-    let init_height = max_y - min_y + 1;
-
-    min_x -= init_width;
-    max_x += init_width;
-    min_y -= init_height;
-    max_y += init_height;
+    let (mut min_x, mut max_x, mut min_y, mut max_y) = get_initial_bounds(&coords);
 
     let mut areas = vec![0; coords.len()];
     let mut infinite = vec![false; coords.len()];
@@ -58,6 +43,18 @@ fn solve_part1(coords: Coords) -> u32 {
         .filter(|(_, inf)| !*inf)
         .map(|(a, _)| a)
         .max().unwrap_or(0) as u32
+}
+
+fn get_initial_bounds(coords: &Coords) -> (i32, i32, i32, i32) {
+    let xs: Vec<_> = coords.iter().map(|c| c.0 as i32).collect();
+    let ys: Vec<_> = coords.iter().map(|c| c.1 as i32).collect();
+
+    let min_x = *xs.iter().min().unwrap();
+    let max_x = *xs.iter().max().unwrap();
+    let min_y = *ys.iter().min().unwrap();
+    let max_y = *ys.iter().max().unwrap();
+
+    (min_x, max_x, min_y, max_y)
 }
 
 fn get_puzzle_input() -> Coords {
