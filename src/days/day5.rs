@@ -13,6 +13,7 @@ pub fn part2() {
     println!("{}", solve_part2(&get_puzzle_input()));
 }
 
+#[allow(dead_code)]
 pub fn time_both_parts() {
     let input_str =  load_data("day5");
     let input = parse_puzzle_input(input_str);

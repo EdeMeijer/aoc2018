@@ -7,10 +7,11 @@ use std::fmt::Formatter;
 use std::ops::Index;
 use std::ops::IndexMut;
 
+#[derive(Clone)]
 pub struct Matrix<T> {
     buf: Vec<T>,
-    height: usize,
-    width: usize,
+    pub height: usize,
+    pub width: usize,
 }
 
 impl<T> Matrix<T> where T: Copy {
@@ -28,12 +29,16 @@ impl<T> Index<(usize, usize)> for Matrix<T> {
     type Output = T;
 
     fn index(&self, s: (usize, usize)) -> &T {
+        assert!(s.0 < self.height);
+        assert!(s.1 < self.width);
         &self.buf[s.0 * self.width + s.1]
     }
 }
 
 impl<T> IndexMut<(usize, usize)> for Matrix<T> {
     fn index_mut(&mut self, s: (usize, usize)) -> &mut T {
+        assert!(s.0 < self.height);
+        assert!(s.1 < self.width);
         &mut self.buf[s.0 * self.width + s.1]
     }
 }
