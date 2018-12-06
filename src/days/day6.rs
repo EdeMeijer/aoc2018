@@ -9,18 +9,20 @@ pub fn part1() {
     println!("{}", solve_part1(get_puzzle_input()));
 }
 
+#[allow(dead_code)]
+pub fn part2() {
+    println!("{}", solve_part2(get_puzzle_input(), 10000));
+}
+
 fn solve_part1(coords: Coords) -> u32 {
-    let (mut min_x, mut max_x, mut min_y, mut max_y) = get_initial_bounds(&coords);
+    let (min_x, max_x, min_y, max_y) = get_initial_bounds(&coords);
 
     let mut areas = vec![0; coords.len()];
     let mut infinite = vec![false; coords.len()];
 
     for x in min_x..=max_x {
         for y in min_y..=max_y {
-            let dists: Vec<_> = coords.iter()
-                .map(|(cx, cy)| (*cy as i32 - y).abs() + (*cx as i32 - x).abs())
-                .collect();
-
+            let dists = get_coord_distances(x, y, &coords);
             let closest_dist = *dists.iter().min().unwrap();
             let closest_indices: Vec<_> = dists.iter().enumerate()
                 .filter(|(_, d)| **d == closest_dist)
@@ -43,6 +45,30 @@ fn solve_part1(coords: Coords) -> u32 {
         .filter(|(_, inf)| !*inf)
         .map(|(a, _)| a)
         .max().unwrap_or(0) as u32
+}
+
+fn solve_part2(coords: Coords, max: i32) -> u32 {
+    let (min_x, max_x, min_y, max_y) = get_initial_bounds(&coords);
+    
+    let mut region = 0;
+
+    for x in min_x..=max_x {
+        for y in min_y..=max_y {
+            let total_dist: i32 = get_coord_distances(x, y, &coords).iter().sum();
+
+            if total_dist < max {
+                region += 1;
+            }
+        }
+    }
+    
+    region
+}
+
+fn get_coord_distances(x: i32, y:i32, coords: &Coords) -> Vec<i32> {
+    coords.iter()
+        .map(|(cx, cy)| (*cy as i32 - y).abs() + (*cx as i32 - x).abs())
+        .collect()
 }
 
 fn get_initial_bounds(coords: &Coords) -> (i32, i32, i32, i32) {
@@ -98,6 +124,14 @@ mod test {
         assert_eq!(
             solve_part1(get_test_input()),
             17
+        )
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(
+            solve_part2(get_test_input(), 32),
+            16
         )
     }
 
