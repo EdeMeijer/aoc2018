@@ -5,6 +5,11 @@ pub fn part1() {
     println!("{}", solve_part1(get_puzzle_input()));
 }
 
+#[allow(dead_code)]
+pub fn part2() {
+    println!("{}", solve_part2(get_puzzle_input()));
+}
+
 struct Node {
     children: Vec<Node>,
     meta: Vec<u32>,
@@ -12,6 +17,10 @@ struct Node {
 
 fn solve_part1(input: Vec<u32>) -> u32 {
     get_meta_sum(&decode(input))
+}
+
+fn solve_part2(input: Vec<u32>) -> u32 {
+    get_node_value(&decode(input))
 }
 
 fn decode(input: Vec<u32>) -> Node {
@@ -36,6 +45,18 @@ fn repeat<I>(func: &mut FnMut() -> I, n: usize) -> Vec<I> {
 fn get_meta_sum(node: &Node) -> u32 {
     node.meta.iter().map(|m| *m).sum::<u32>() +
         node.children.iter().map(get_meta_sum).sum::<u32>()
+}
+
+fn get_node_value(node: &Node) -> u32 {
+    if node.children.is_empty() {
+        get_meta_sum(node)
+    } else {
+        node.meta.iter()
+            .map(|i| *i as usize)
+            .filter(|i| *i > 0 && *i <= node.children.len())
+            .map(|i| get_node_value(&node.children[i - 1]))
+            .sum::<u32>()
+    }
 }
 
 fn get_puzzle_input() -> Vec<u32> {
@@ -65,6 +86,14 @@ mod test {
         assert_eq!(
             solve_part1(get_test_input()),
             138
+        );
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(
+            solve_part2(get_test_input()),
+            66
         );
     }
 
