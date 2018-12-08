@@ -11,27 +11,26 @@ struct Node {
 }
 
 fn solve_part1(input: Vec<u32>) -> u32 {
-    let iter = input.into_iter();
-
-    let (root, _) = decode(iter);
-
-    get_meta_sum(&root)
+    get_meta_sum(&decode(input))
 }
 
-fn decode<I>(mut input: I) -> (Node, I) where I: Iterator<Item=u32> {
-    let num_children = input.next().unwrap() as usize;
-    let num_meta_entries = input.next().unwrap() as usize;
+fn decode(input: Vec<u32>) -> Node {
+    let mut iter = input.into_iter();
+    decode_step(&mut || iter.next().unwrap())
+}
 
-    let mut children = vec![];
-    for _ in 0..num_children {
-        let (child, input_) = decode(input);
-        input = input_;
-        children.push(child);
-    }
+fn decode_step(read: &mut FnMut() -> u32) -> Node {
+    let num_children = read() as usize;
+    let num_meta_entries = read() as usize;
 
-    let meta = (0..num_meta_entries).into_iter().map(|_| input.next().unwrap()).collect();
+    let children = repeat(&mut || decode_step(read), num_children);
+    let meta = repeat(read, num_meta_entries);
 
-    (Node { children, meta }, input)
+    Node { children, meta }
+}
+
+fn repeat<I>(func: &mut FnMut() -> I, n: usize) -> Vec<I> {
+    (0..n).into_iter().map(|_| func()).collect()
 }
 
 fn get_meta_sum(node: &Node) -> u32 {
@@ -68,7 +67,7 @@ mod test {
             138
         );
     }
-    
+
     fn get_test_input() -> Vec<u32> {
         vec![2, 3, 0, 3, 10, 11, 12, 1, 1, 0, 1, 99, 2, 1, 1, 2]
     }
