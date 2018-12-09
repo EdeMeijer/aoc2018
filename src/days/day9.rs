@@ -128,9 +128,9 @@ fn solve(players: usize, max_marble: usize) -> usize {
     let mut circle = CircularList::with_capacity(max_marble + 1);
     circle.insert(0usize);
 
-    for (marble, player) in (1..=max_marble).zip((0..players).cycle()) {
+    for marble in 1..=max_marble {
         if marble % 23 == 0 {
-            scores[player] += circle.seek(-7).remove().unwrap() + marble;
+            scores[marble % players] += circle.seek(-7).remove().unwrap() + marble;
         } else {
             circle.next().insert(marble);
         }
