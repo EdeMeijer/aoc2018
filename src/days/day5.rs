@@ -1,7 +1,8 @@
+//! Solutions for https://adventofcode.com/2018/day/5
 use std::collections::HashSet;
+use std::time::Instant;
 
 use utils::data::load_data;
-use std::time::Instant;
 
 #[allow(dead_code)]
 pub fn part1() {
@@ -15,11 +16,11 @@ pub fn part2() {
 
 #[allow(dead_code)]
 pub fn time_both_parts() {
-    let input_str =  load_data("day5");
+    let input_str = load_data("day5");
     let input = parse_puzzle_input(input_str);
 
     let start = Instant::now();
-    
+
     solve_part1(&input);
     solve_part2(&input);
 

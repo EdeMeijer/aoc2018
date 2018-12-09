@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/4
 use std::collections::HashMap;
 
 use chrono::DateTime;
@@ -211,7 +212,7 @@ mod test {
             4455
         )
     }
-    
+
     fn get_test_input() -> Vec<DateEvent> {
         let raw_input = "[1518-11-01 00:00] Guard #10 begins shift
 [1518-11-01 00:05] falls asleep

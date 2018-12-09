@@ -25,21 +25,27 @@ impl<T> Matrix<T> where T: Copy {
     }
 }
 
+impl<T> Matrix<T> {
+    fn index_of(&self, s: (usize, usize)) -> usize {
+        assert!(s.0 < self.height);
+        assert!(s.1 < self.width);
+        s.0 * self.width + s.1
+    }
+}
+
 impl<T> Index<(usize, usize)> for Matrix<T> {
     type Output = T;
 
     fn index(&self, s: (usize, usize)) -> &T {
-        assert!(s.0 < self.height);
-        assert!(s.1 < self.width);
-        &self.buf[s.0 * self.width + s.1]
+        let i = self.index_of(s);
+        &self.buf[i]
     }
 }
 
 impl<T> IndexMut<(usize, usize)> for Matrix<T> {
     fn index_mut(&mut self, s: (usize, usize)) -> &mut T {
-        assert!(s.0 < self.height);
-        assert!(s.1 < self.width);
-        &mut self.buf[s.0 * self.width + s.1]
+        let i = self.index_of(s);
+        &mut self.buf[i]
     }
 }
 

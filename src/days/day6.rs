@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/6
 use utils::data::load_data;
 use utils::data::non_empty_lines;
 
@@ -49,7 +50,7 @@ fn solve_part1(coords: Coords) -> u32 {
 
 fn solve_part2(coords: Coords, max: i32) -> u32 {
     let (min_x, max_x, min_y, max_y) = get_initial_bounds(&coords);
-    
+
     let mut region = 0;
 
     for x in min_x..=max_x {
@@ -61,11 +62,11 @@ fn solve_part2(coords: Coords, max: i32) -> u32 {
             }
         }
     }
-    
+
     region
 }
 
-fn get_coord_distances(x: i32, y:i32, coords: &Coords) -> Vec<i32> {
+fn get_coord_distances(x: i32, y: i32, coords: &Coords) -> Vec<i32> {
     coords.iter()
         .map(|(cx, cy)| (*cy as i32 - y).abs() + (*cx as i32 - x).abs())
         .collect()

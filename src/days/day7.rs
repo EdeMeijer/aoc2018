@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/7
 use std::collections::HashSet;
 
 use regex::Regex;
@@ -55,11 +56,12 @@ fn solve_part2(dependencies: Vec<Dependency>, num_workers: usize, base_duration:
         }
         jobs = remaining;
 
+        // Get current availability of tasks and workers
         let ready = get_ready_ids(&pending_ids, &dependencies, &resolved);
         let available_workers = num_workers - jobs.len();
 
         if ready.is_empty() || available_workers == 0 {
-            // Wait until a job finishes and try again
+            // No tasks or no workers, wait until a job finishes and try again
             let wait_until = jobs.iter()
                 .map(|j| j.1)
                 .min().unwrap();
@@ -96,7 +98,7 @@ fn get_ready_ids(
     dependencies: &Vec<Dependency>,
     resolved: &Vec<char>,
 ) -> Vec<char> {
-    // Get all ids that are not yet resolved but that have no unresolved dependencies
+    // Get all ids that are not yet resolved and that have no unresolved dependencies
     ids.into_iter()
         .filter(|id| !resolved.contains(id))
         .filter(|id| {

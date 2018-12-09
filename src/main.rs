@@ -1,8 +1,8 @@
+extern crate chrono;
 #[macro_use]
 #[cfg(test)]
 extern crate maplit;
 extern crate regex;
-extern crate chrono;
 
 use days::*;
 

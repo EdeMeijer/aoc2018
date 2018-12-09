@@ -1,4 +1,6 @@
+//! Solutions for https://adventofcode.com/2018/day/8
 use utils::data::load_data;
+use utils::misc::repeat;
 
 #[allow(dead_code)]
 pub fn part1() {
@@ -24,6 +26,7 @@ fn solve_part2(input: Vec<usize>) -> usize {
 }
 
 fn decode(input: Vec<usize>) -> Node {
+    /// Decode a node from the data stream recursively
     fn decode_(read: &mut FnMut() -> usize) -> Node {
         let header = repeat(read, 2);
         Node {
@@ -31,12 +34,9 @@ fn decode(input: Vec<usize>) -> Node {
             meta: repeat(read, header[1]),
         }
     }
+    // Start decoding from the start to build the root node
     let mut iter = input.into_iter();
     decode_(&mut || iter.next().unwrap())
-}
-
-fn repeat<I>(func: &mut FnMut() -> I, n: usize) -> Vec<I> {
-    (0..n).into_iter().map(|_| func()).collect()
 }
 
 fn get_meta_sum(node: &Node) -> usize {
