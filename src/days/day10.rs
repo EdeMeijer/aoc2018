@@ -7,7 +7,12 @@ use utils::matrix::Matrix;
 
 #[allow(dead_code)]
 pub fn part1() {
-    println!("{}", solve_part1(get_puzzle_input()));
+    println!("{}", solve_both_parts(get_puzzle_input()).0);
+}
+
+#[allow(dead_code)]
+pub fn part2() {
+    println!("{}", solve_both_parts(get_puzzle_input()).1);
 }
 
 struct Point {
@@ -15,8 +20,9 @@ struct Point {
     v: (i32, i32)
 }
 
-fn solve_part1(mut points: Vec<Point>) -> String {
+fn solve_both_parts(mut points: Vec<Point>) -> (String, usize) {
     let mut area = area_of(&points);
+    let mut seconds_waited = 0;
 
     loop {
         let new_points = do_step(&points);
@@ -24,9 +30,10 @@ fn solve_part1(mut points: Vec<Point>) -> String {
 
         if new_area < area {
             area = new_area;
-            points = new_points
+            points = new_points;
+            seconds_waited += 1;
         } else {
-            break format_points(&points)
+            break (format_points(&points), seconds_waited)
         }
     }
 }
@@ -109,7 +116,7 @@ mod test {
     use super::*;
     
     #[test]
-    fn test_part1() {
+    fn test_solve() {
         let expected = String::from("
 #...#..###
 #...#...#.
@@ -121,8 +128,8 @@ mod test {
 #...#..###".trim());
         
         assert_eq!(
-            solve_part1(parse_input(get_test_data())),
-            expected
+            solve_both_parts(parse_input(get_test_data())),
+            (expected, 3)
         );
     }
     
