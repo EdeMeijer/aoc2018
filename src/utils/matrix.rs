@@ -31,6 +31,16 @@ impl<T> Matrix<T> {
         assert!(s.1 < self.width);
         s.0 * self.width + s.1
     }
+
+    pub fn rows(&self) -> impl Iterator<Item=Vec<&T>> {
+        let width= self.width;
+        (0..self.height)
+            .map(move |y| {
+                (0..width)
+                    .map(|x| &self[(y, x)])
+                    .collect()
+            })
+    }
 }
 
 impl<T> Index<(usize, usize)> for Matrix<T> {

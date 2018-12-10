@@ -1,4 +1,4 @@
-//! Solutions for https://adventofcode.com/2018/day/89
+//! Solutions for https://adventofcode.com/2018/day/9
 use utils::circular_list::CircularList;
 
 #[allow(dead_code)]
