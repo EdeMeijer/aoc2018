@@ -20,20 +20,20 @@ struct Point {
     v: (i32, i32)
 }
 
-fn solve_both_parts(mut points: Vec<Point>) -> (String, usize) {
+fn solve_both_parts(points: Vec<Point>) -> (String, usize) {
     let mut area = area_of(&points);
-    let mut seconds_waited = 0;
+    let mut t = 0;
 
     loop {
-        let new_points = do_step(&points);
+        t += 1;
+        let new_points = project(&points, t);
         let new_area = area_of(&new_points);
 
         if new_area < area {
             area = new_area;
-            points = new_points;
-            seconds_waited += 1;
         } else {
-            break (format_points(&points), seconds_waited)
+            t -= 1;
+            break (format_points(&project(&points, t)), t as usize)
         }
     }
 }
@@ -43,11 +43,11 @@ fn area_of(points: &Vec<Point>) -> i64 {
     (y_max - y_min) as i64 * (x_max - x_min) as i64
 }
 
-fn do_step(points: &Vec<Point>) -> Vec<Point> {
+fn project(points: &Vec<Point>, time: i32) -> Vec<Point> {
     points.iter()
         .map(|point| {
             Point {
-                p: (point.p.0 + point.v.0, point.p.1 + point.v.1),
+                p: (point.p.0 + point.v.0 * time, point.p.1 + point.v.1 * time),
                 v: point.v
             }
         })
