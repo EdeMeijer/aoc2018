@@ -70,20 +70,6 @@ fn gen_value(gen: &Vec<u8>, lower: i64, upper: i64) -> i64 {
         .sum::<i64>()
 }
 
-fn print_gen(gen: &Vec<u8>) {
-    let mut started = false;
-    for z in gen {
-        let act = *z == 1;
-        if act {
-            started = true;
-        }
-        if started {
-            print!("{}", if act { "#" } else { "." });
-        }
-    }
-    println!();
-}
-
 fn apply_generation(source: Vec<u8>, mut target: Vec<u8>, kernels: &Vec<Vec<u8>>) -> (Vec<u8>, Vec<u8>) {
     for i in 0..source.len() {
         let mut matches = 0;
