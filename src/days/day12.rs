@@ -18,26 +18,70 @@ struct Scenario {
 }
 
 fn solve(scenario: Scenario, generations: usize) -> i64 {
-    let offset = 2 * generations;
+    let max_generations = 10000;
+
+    let offset = 2 * max_generations;
     let lower = -(offset as i64);
     let upper = scenario.initial.len() as i64 + offset as i64;
 
     let mut source = vec![0; (upper - lower) as usize];
     let mut target = vec![0; (upper - lower) as usize];
-    
+
     for (i, p) in scenario.initial.iter().enumerate() {
         source[i + offset] = *p;
     }
 
+    let mut gv = gen_value(&source, lower, upper);
+    let mut last_delta_gv = 0;
+    let mut same_delta_count = 0;
+
     for g in 0..generations {
+        if g == max_generations {
+            panic!("Did not find a solution within {} generations", max_generations);
+        }
         let r = apply_generation(source, target, &scenario.kernels);
         source = r.0;
         target = r.1;
+
+        let mut gv_new = gen_value(&source, lower, upper);
+        let delta_gv = gv_new - gv;
+        gv = gv_new;
+
+        if delta_gv == last_delta_gv {
+            same_delta_count += 1;
+            if same_delta_count == 10 {
+                // Assume the same delta will keep repeating.
+                let remaining_gens = generations - g - 1;
+                return gv + remaining_gens as i64 * delta_gv;
+            }
+        } else {
+            same_delta_count = 0;
+        }
+
+        last_delta_gv = delta_gv;
     }
 
-    source.into_iter().zip(lower..upper)
-        .map(|(has_plant, potno)| potno * has_plant as i64)
+    gen_value(&source, lower, upper)
+}
+
+fn gen_value(gen: &Vec<u8>, lower: i64, upper: i64) -> i64 {
+    gen.iter().zip(lower..upper)
+        .map(|(has_plant, potno)| potno * *has_plant as i64)
         .sum::<i64>()
+}
+
+fn print_gen(gen: &Vec<u8>) {
+    let mut started = false;
+    for z in gen {
+        let act = *z == 1;
+        if act {
+            started = true;
+        }
+        if started {
+            print!("{}", if act { "#" } else { "." });
+        }
+    }
+    println!();
 }
 
 fn apply_generation(source: Vec<u8>, mut target: Vec<u8>, kernels: &Vec<Vec<u8>>) -> (Vec<u8>, Vec<u8>) {
@@ -51,7 +95,7 @@ fn apply_generation(source: Vec<u8>, mut target: Vec<u8>, kernels: &Vec<Vec<u8>>
         }
         target[i] = matches;
     }
-    
+
     (target, source)
 }
 
