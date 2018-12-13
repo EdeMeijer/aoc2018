@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/11
 #[allow(dead_code)]
 pub fn part1() {
     println!("{:?}", solve_part1(300, 8868));

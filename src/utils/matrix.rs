@@ -6,6 +6,8 @@ use std::fmt::Error;
 use std::fmt::Formatter;
 use std::ops::Index;
 use std::ops::IndexMut;
+use std::fmt::Write;
+use std::fmt::Display;
 
 #[derive(Clone)]
 pub struct Matrix<T> {
@@ -41,6 +43,41 @@ impl<T> Matrix<T> {
                     .collect()
             })
     }
+
+    pub fn format(
+        &self,
+        pre: &str,
+        line_pre: &str,
+        sep: &str,
+        line_post: &str,
+        line_sep: &str,
+        post: &str,
+        formatter: fn(&T) -> String
+    ) -> Result<String, Error> {
+        let mut f = String::new();
+        f.write_str(pre)?;
+        for y in 0..self.height {
+            f.write_str(line_pre)?;
+            for x in 0..self.width {
+                f.write_str(&formatter(&self[(y, x)]))?;
+                if x < self.width - 1 {
+                    f.write_str(sep)?;
+                }
+            }
+            f.write_str(line_post)?;
+            if y < self.height - 1 {
+                f.write_str(line_sep)?;
+            }
+        }
+        f.write_str(post)?;
+        Ok(f)
+    }
+}
+
+impl<T> Matrix<T> where T: Display {
+    pub fn format_dense(&self) -> Result<String, Error> {
+        self.format("", "", "", "", "\n", "", |x| format!("{}", x))
+    }
 }
 
 impl<T> Index<(usize, usize)> for Matrix<T> {
@@ -62,21 +99,8 @@ impl<T> IndexMut<(usize, usize)> for Matrix<T> {
 /// Custom Debug trait that prints the 2d matrix over multiple lines
 impl<T> Debug for Matrix<T> where T: Debug {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        write!(f, "[")?;
-        for y in 0..self.height {
-            write!(f, "[")?;
-            for x in 0..self.width {
-                write!(f, "{:?}", self[(y, x)])?;
-                if x < self.width - 1 {
-                    write!(f, ", ")?;
-                }
-            }
-            write!(f, "]")?;
-            if y < self.height - 1 {
-                write!(f, "\n ")?;
-            }
-        }
-        write!(f, "]")
+        let s = self.format("[", "[", ", ", "]", "\n ", "]", |x| format!("{:?}", x))?;
+        f.write_str(&s)
     }
 }
 

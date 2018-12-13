@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/12
 use utils::data::load_data;
 use utils::data::non_empty_lines;
 
