@@ -13,7 +13,13 @@ use utils::matrix::Matrix;
 #[allow(dead_code)]
 pub fn part1() {
     let (y, x) = solve_part1(get_puzzle_input());
-    println!("{}, {}", x, y);
+    println!("{},{}", x, y);
+}
+
+#[allow(dead_code)]
+pub fn part2() {
+    let (y, x) = solve_part2(get_puzzle_input());
+    println!("{},{}", x, y);
 }
 
 struct Scenario {
@@ -60,10 +66,21 @@ impl Display for TrackCell {
 
 fn solve_part1(mut scenario: Scenario) -> (usize, usize) {
     loop {
-        match do_tick(&mut scenario) {
-            Some(pos) => break pos,
-            None => {}
-        };
+        if let Some(pos) = do_tick(&mut scenario) {
+            break pos;
+        }
+    }
+}
+
+fn solve_part2(mut scenario: Scenario) -> (usize, usize) {
+    loop {
+        do_tick(&mut scenario);
+        if scenario.carts.is_empty() {
+            panic!("No carts remaining");
+        }
+        if scenario.carts.len() == 1 {
+            break scenario.carts.remove(0).pos;
+        }
     }
 }
 
@@ -105,25 +122,50 @@ fn do_tick(scenario: &mut Scenario) -> Option<(usize, usize)> {
     }
 
     // Crash detection
-    let mut end_positions = HashSet::with_capacity(scenario.carts.len());
+    let mut end_positions: HashMap<(usize, usize), _> = HashMap::with_capacity(scenario.carts.len());
+
+    let mut crashes = vec![];
+    let mut crashed_carts = HashSet::new();
 
     for (i, cart) in scenario.carts.iter().enumerate() {
-        if end_positions.contains(&cart.pos) {
-            // This cart ends at the same position as another one, so it crashed
-            return Some(cart.pos);
+        if crashed_carts.contains(&i) {
+            // Something already crashed into this cart so we consider it to not have moved
+            continue;
         }
-        end_positions.insert(cart.pos);
+
+        let mut crashed_with = None;
+
+        if end_positions.contains_key(&cart.pos) {
+            // This cart ends at the same position as another one, so it crashed
+            crashed_with = Some(end_positions[&cart.pos]);
+        }
+
+        end_positions.insert(cart.pos, i);
 
         if start_positions.contains_key(&cart.pos) {
-            // Another cart started at our end position. If that cart moved after the current cart
-            // did, that was a crash.
+            // Another cart started at our end position. If that cart would have moved after the 
+            // current cart did, that was a crash.
             if start_positions[&cart.pos] > i {
-                return Some(cart.pos);
+                crashed_with = Some(start_positions[&cart.pos]);
             }
+        }
+
+        if let Some(other_i) = crashed_with {
+            crashed_carts.insert(i);
+            crashed_carts.insert(other_i);
+
+            crashes.push(cart.pos.clone());
         }
     }
 
-    None
+    // Filter out the crashed carts
+    let mut filter_indices: Vec<usize> = crashed_carts.into_iter().collect();
+    filter_indices.sort();
+    for (removed, i) in filter_indices.into_iter().enumerate() {
+        scenario.carts.remove(i - removed);
+    }
+
+    if crashes.is_empty() { None } else { Some(crashes.remove(0)) }
 }
 
 fn get_puzzle_input() -> Scenario {
@@ -187,6 +229,15 @@ mod test {
     }
 
     #[test]
+    fn test_part2() {
+        assert_eq!(
+            solve_part2(parse_input(get_test_input_part2())),
+            (4, 6)
+        )
+    }
+
+
+    #[test]
     fn test_parse() {
         let scenario = parse_input(get_test_input());
 
@@ -215,5 +266,16 @@ mod test {
 | | |  | v  |
 \-+-/  \-+--/
   \------/   ");
+    }
+
+    fn get_test_input_part2() -> String {
+        return String::from(r"
+/>-<\  
+|   |  
+| /<+-\
+| | | v
+\>+</ |
+  |   ^
+  \<->/");
     }
 }
