@@ -16,12 +16,19 @@ pub fn part1() {
     println!("{}", solve_part1(get_puzzle_input()));
 }
 
+#[allow(dead_code)]
+pub fn part2() {
+    println!("{}", solve_part2(get_puzzle_input()));
+}
+
 const ADJACENT_OFFSETS: [(i32, i32); 4] = [(-1, 0), (0, -1), (0, 1), (1, 0)];
 type Grid = Matrix<Tile>;
 
+#[derive(Clone)]
 struct World {
     grid: Grid,
     actors: Vec<Actor>,
+    elf_ap: i16
 }
 
 #[derive(Copy, Clone)]
@@ -42,37 +49,66 @@ impl Display for Tile {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Actor {
     clan: Clan,
     loc: (usize, usize),
     hp: i16,
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone)]
 enum Clan {
     Elf,
     Goblin,
 }
 
-fn solve_part1(mut world: World) -> u32 {
+struct BattleResult {
+    checksum: u32,
+    dead_elfs: usize
+}
+
+fn solve_part1(world: World) -> u32 {
+    perform_battle(world).checksum
+}
+
+fn solve_part2(mut world: World) -> u32 {
+    loop {
+        let result = perform_battle( world.clone());
+        
+        if result.dead_elfs == 0 {
+            break result.checksum
+        }
+        
+        world.elf_ap += 1;
+    }
+}
+
+fn perform_battle(mut world: World) -> BattleResult {
     let mut full_rounds = 0;
     loop {
         let result = perform_round(world);
         world = result.0;
-        
+
         if result.1 {
             // Battle ended
             break;
         }
         full_rounds += 1;
     }
-    
+
     let remaining_hp = world.actors.iter()
         .map(|a| a.hp.max(0) as u32)
         .sum::<u32>();
     
-    remaining_hp * full_rounds
+    let dead_elfs = world.actors.iter()
+        .filter(|a| a.clan == Clan::Elf)
+        .filter(|a| a.hp <= 0)
+        .count();
+
+    BattleResult {
+        checksum: remaining_hp * full_rounds,
+        dead_elfs
+    }
 }
 
 fn shift_loc(loc: (usize, usize), shift: (i32, i32)) -> (usize, usize) {
@@ -80,7 +116,7 @@ fn shift_loc(loc: (usize, usize), shift: (i32, i32)) -> (usize, usize) {
 }
 
 fn perform_round(world: World) -> (World, bool) {
-    let World { mut grid, mut actors } = world;
+    let World { mut grid, mut actors, elf_ap } = world;
     
     // Determine the actor ordering
     let mut actor_order: Vec<_> = actors.iter().enumerate()
@@ -188,7 +224,8 @@ fn perform_round(world: World) -> (World, bool) {
                 // Fight the first enemy (already sorted by reading order)
                 let enemy_i = enemies_in_range[0];
                 
-                actors[enemy_i].hp -= 3;
+                let ap = if actors[i].clan == Clan::Elf { elf_ap } else { 3 };
+                actors[enemy_i].hp -= ap;
                 
                 if actors[enemy_i].hp <= 0 {
                     // He ded, remove from grid
@@ -198,7 +235,7 @@ fn perform_round(world: World) -> (World, bool) {
         }
     }
 
-    (World { grid, actors }, battle_ended)
+    (World { grid, actors, elf_ap }, battle_ended)
 }
 
 fn get_enemies_in_range(actors: &Vec<Actor>, actor_i: usize, grid: &Grid) -> Vec<(usize)> {
@@ -245,7 +282,7 @@ fn parse_input(input: String) -> World {
         }
     }
     
-    World { grid, actors }
+    World { grid, actors, elf_ap: 3 }
 }
 
 #[cfg(test)]
@@ -267,6 +304,24 @@ mod test {
         assert_eq!(
             solve_part1( parse_input(input)),
             27730
+        );
+    }
+
+    #[test]
+    fn test_part2() {
+        let input = String::from(r"
+#######
+#.G...#
+#...EG#
+#.#.#G#
+#..G#E#
+#.....#
+#######
+");
+
+        assert_eq!(
+            solve_part2( parse_input(input)),
+            4988
         );
     }
 }
