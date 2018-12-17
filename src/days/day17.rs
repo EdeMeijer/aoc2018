@@ -1,7 +1,6 @@
 use std::fmt::Display;
 use std::fmt::Error;
 use std::fmt::Formatter;
-use std::fs;
 
 use regex::Regex;
 
@@ -15,6 +14,10 @@ pub fn part1() {
     println!("{}", solve_part1(get_puzzle_input()));
 }
 
+#[allow(dead_code)]
+pub fn part2() {
+    println!("{}", solve_part2(get_puzzle_input()));
+}
 
 type Coord = (usize, usize);
 
@@ -55,6 +58,14 @@ struct Vein {
 }
 
 fn solve_part1(veins: Vec<Vein>) -> usize {
+    count_squares_of_type(fully_simulate(veins), vec![StreamingWater, SettledWater])
+}
+
+fn solve_part2(veins: Vec<Vein>) -> usize {
+    count_squares_of_type(fully_simulate(veins), vec![SettledWater])
+}
+
+fn fully_simulate(veins: Vec<Vein>) -> World {
     let mut world = build_world(veins);
 
     // Let the source spawn streaming water right beneath it
@@ -65,21 +76,22 @@ fn solve_part1(veins: Vec<Vein>) -> usize {
         let new_world = do_tick(world.clone());
         if new_world == world {
             // Nothing changed, so we're done
-            break;
+            break world;
         }
         world = new_world;
     }
+}
 
-    let mut water_tiles = 0;
+fn count_squares_of_type(world: World, types: Vec<Square>) -> usize {
+    let mut count = 0;
     for y in 0..world.grid.height {
         for x in 0..world.grid.width {
-            let c = world.grid[(y, x)];
-            if c == StreamingWater || c == SettledWater {
-                water_tiles += 1;
+            if types.contains(&world.grid[(y, x)]) {
+                count += 1;
             }
         }
     }
-    water_tiles
+    count
 }
 
 fn build_world(veins: Vec<Vein>) -> World {
@@ -218,6 +230,14 @@ mod tests {
         assert_eq!(
             solve_part1(parse_input(get_test_input())),
             57
+        );
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(
+            solve_part2(parse_input(get_test_input())),
+            29
         );
     }
 
