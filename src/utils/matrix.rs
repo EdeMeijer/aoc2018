@@ -9,7 +9,7 @@ use std::ops::IndexMut;
 use std::fmt::Write;
 use std::fmt::Display;
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct Matrix<T> {
     buf: Vec<T>,
     pub height: usize,
