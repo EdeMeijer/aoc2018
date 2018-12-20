@@ -2,6 +2,7 @@ extern crate chrono;
 #[macro_use]
 extern crate maplit;
 extern crate regex;
+extern crate core;
 
 use days::*;
 
@@ -46,5 +47,7 @@ fn main() {
 //    day18::part1();
 //    day18::part2();
 //    day19::part1();
-    day19::part2();
+//    day19::part2();
+//    day20::part1();
+    day20::part2();
 }
