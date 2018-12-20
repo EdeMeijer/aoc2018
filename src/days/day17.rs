@@ -1,7 +1,4 @@
-use std::fmt::Display;
-use std::fmt::Error;
-use std::fmt::Formatter;
-
+//! Solutions for https://adventofcode.com/2018/day/17
 use regex::Regex;
 
 use days::day17::Square::*;
@@ -37,18 +34,6 @@ enum Square {
     Clay,
     SettledWater,
     StreamingWater,
-}
-
-impl Display for Square {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        let c = match self {
-            Sand => ".",
-            Clay => "#",
-            SettledWater => "~",
-            StreamingWater => "|",
-        };
-        f.write_str(c)
-    }
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -128,7 +113,7 @@ fn do_tick(mut world: World) -> World {
         }
     }
 
-    // Step 1: flood fill
+    // Step 2: flood fill
     for y in 0..height - 1 {
         for x in 0..width {
             let coord = (y, x);
@@ -177,7 +162,7 @@ fn calc_flood_fill(world: &World, local_coord: Coord) -> (usize, usize, Square) 
         while x > 0 && x < world.grid.width - 1 {
             x = (x as i32 + dir) as usize;
             if world.grid[(y, x)] == Clay {
-                // Found clay on the left
+                // Found clay on the side
                 found_clay = true;
                 break;
             }
@@ -198,11 +183,9 @@ fn calc_flood_fill(world: &World, local_coord: Coord) -> (usize, usize, Square) 
     (span_left, span_right, filler)
 }
 
-
 fn get_puzzle_input() -> Vec<Vein> {
     parse_input(load_data("day17"))
 }
-
 
 fn parse_input(input: String) -> Vec<Vein> {
     non_empty_lines(input).into_iter()

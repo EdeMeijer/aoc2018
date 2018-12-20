@@ -2,12 +2,12 @@
 //! tuples.
 
 use std::fmt::Debug;
+use std::fmt::Display;
 use std::fmt::Error;
 use std::fmt::Formatter;
+use std::fmt::Write;
 use std::ops::Index;
 use std::ops::IndexMut;
-use std::fmt::Write;
-use std::fmt::Display;
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct Matrix<T> {
@@ -35,7 +35,7 @@ impl<T> Matrix<T> {
     }
 
     pub fn rows(&self) -> impl Iterator<Item=Vec<&T>> {
-        let width= self.width;
+        let width = self.width;
         (0..self.height)
             .map(move |y| {
                 (0..width)
@@ -52,7 +52,7 @@ impl<T> Matrix<T> {
         line_post: &str,
         line_sep: &str,
         post: &str,
-        formatter: fn(&T) -> String
+        formatter: fn(&T) -> String,
     ) -> Result<String, Error> {
         let mut f = String::new();
         f.write_str(pre)?;

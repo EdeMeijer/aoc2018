@@ -114,7 +114,7 @@ impl<T> CircularList<T> {
 #[cfg(test)]
 mod test {
     use super::*;
-    
+
     #[test]
     fn test_circle() {
         let mut circle = CircularList::new(); // []

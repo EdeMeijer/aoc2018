@@ -1,15 +1,15 @@
 //! Solutions for https://adventofcode.com/2018/day/15
 use std;
+use std::collections::HashSet;
+use std::fmt::Display;
+use std::fmt::Error;
+use std::fmt::Formatter;
+use std::mem::swap;
 
 use days::day15::Tile::ActorRef;
-use utils::matrix::Matrix;
-use std::collections::HashSet;
-use std::mem::swap;
-use utils::data::non_empty_lines;
 use utils::data::load_data;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::fmt::Error;
+use utils::data::non_empty_lines;
+use utils::matrix::Matrix;
 
 #[allow(dead_code)]
 pub fn part1() {
@@ -22,13 +22,14 @@ pub fn part2() {
 }
 
 const ADJACENT_OFFSETS: [(i32, i32); 4] = [(-1, 0), (0, -1), (0, 1), (1, 0)];
+
 type Grid = Matrix<Tile>;
 
 #[derive(Clone)]
 struct World {
     grid: Grid,
     actors: Vec<Actor>,
-    elf_ap: i16
+    elf_ap: i16,
 }
 
 #[derive(Copy, Clone)]
@@ -64,7 +65,7 @@ enum Clan {
 
 struct BattleResult {
     checksum: u32,
-    dead_elfs: usize
+    dead_elfs: usize,
 }
 
 fn solve_part1(world: World) -> u32 {
@@ -73,12 +74,12 @@ fn solve_part1(world: World) -> u32 {
 
 fn solve_part2(mut world: World) -> u32 {
     loop {
-        let result = perform_battle( world.clone());
-        
+        let result = perform_battle(world.clone());
+
         if result.dead_elfs == 0 {
-            break result.checksum
+            break result.checksum;
         }
-        
+
         world.elf_ap += 1;
     }
 }
@@ -99,7 +100,7 @@ fn perform_battle(mut world: World) -> BattleResult {
     let remaining_hp = world.actors.iter()
         .map(|a| a.hp.max(0) as u32)
         .sum::<u32>();
-    
+
     let dead_elfs = world.actors.iter()
         .filter(|a| a.clan == Clan::Elf)
         .filter(|a| a.hp <= 0)
@@ -107,7 +108,7 @@ fn perform_battle(mut world: World) -> BattleResult {
 
     BattleResult {
         checksum: remaining_hp * full_rounds,
-        dead_elfs
+        dead_elfs,
     }
 }
 
@@ -117,15 +118,15 @@ fn shift_loc(loc: (usize, usize), shift: (i32, i32)) -> (usize, usize) {
 
 fn perform_round(world: World) -> (World, bool) {
     let World { mut grid, mut actors, elf_ap } = world;
-    
+
     // Determine the actor ordering
     let mut actor_order: Vec<_> = actors.iter().enumerate()
         .map(|(i, a)| (i, a.loc))
         .collect();
-    
+
     actor_order.sort_by_key(|tup| tup.1);
     let actor_order: Vec<_> = actor_order.into_iter().map(|tup| tup.0).collect();
-    
+
     let mut battle_ended = false;
 
     // Let every actor perform their actions, if not dead
@@ -143,9 +144,9 @@ fn perform_round(world: World) -> (World, bool) {
                 battle_ended = true;
                 break;
             }
-            
+
             let mut enemies_in_range = get_enemies_in_range(&actors, i, &grid);
-            
+
             if enemies_in_range.is_empty() {
                 // No enemy in range, so we need to determine the best step, if any
                 let mut distances = Matrix::new(grid.height, grid.width, std::u32::MAX);
@@ -162,7 +163,7 @@ fn perform_round(world: World) -> (World, bool) {
                     // For every entry in the frontier, find cells that have a higher distance than
                     // the next distance. 
                     let mut next_frontier = HashSet::new();
-                    
+
                     for origin in &frontier {
                         let next_dist = distances[*origin] + 1;
                         let cur_dir = initial_dirs[*origin];
@@ -187,15 +188,15 @@ fn perform_round(world: World) -> (World, bool) {
                                             Some(old) => Some(old.min(cur_dir))
                                         };
                                     }
-                                },
+                                }
                                 Tile::Wall => {}
                             }
                         }
                     }
-                    
+
                     frontier = next_frontier.into_iter().collect();
                 }
-                
+
                 if let Some(dir) = dir_to_target {
                     // Found a way to get to a target, let's move!
                     let next_loc = shift_loc(actors[i].loc, ADJACENT_OFFSETS[dir]);
@@ -204,29 +205,29 @@ fn perform_round(world: World) -> (World, bool) {
                     grid[next_loc] = actor_ref;
 
                     actors[i].loc = next_loc;
-                    
+
                     // Update the enemies in range
                     enemies_in_range = get_enemies_in_range(&actors, i, &grid);
                 }
             }
-            
+
             if !enemies_in_range.is_empty() {
                 // Fight!
                 // Filter the enemies in range that have the lowest hp
                 let min_hp = enemies_in_range.iter()
                     .map(|a| actors[*a].hp)
                     .min().unwrap();
-                
+
                 enemies_in_range = enemies_in_range.into_iter()
                     .filter(|a| actors[*a].hp == min_hp)
                     .collect();
-                
+
                 // Fight the first enemy (already sorted by reading order)
                 let enemy_i = enemies_in_range[0];
-                
+
                 let ap = if actors[i].clan == Clan::Elf { elf_ap } else { 3 };
                 actors[enemy_i].hp -= ap;
-                
+
                 if actors[enemy_i].hp <= 0 {
                     // He ded, remove from grid
                     grid[actors[enemy_i].loc] = Tile::Empty;
@@ -241,7 +242,7 @@ fn perform_round(world: World) -> (World, bool) {
 fn get_enemies_in_range(actors: &Vec<Actor>, actor_i: usize, grid: &Grid) -> Vec<(usize)> {
     let actor = &actors[actor_i];
     let mut result = vec![];
-    
+
     for offset in &ADJACENT_OFFSETS {
         let loc = shift_loc(actor.loc, *offset);
         if let ActorRef(a) = grid[loc] {
@@ -261,16 +262,16 @@ fn parse_input(input: String) -> World {
     let lines = non_empty_lines(input);
     let height = lines.len();
     let width = lines[0].len();
-    
+
     let mut grid = Grid::new(height, width, Tile::Empty);
     let mut actors = vec![];
-    
+
     for (y, line) in lines.into_iter().enumerate() {
         for (x, cell) in line.chars().enumerate() {
             let loc = (y, x);
-            let tile = match cell { 
+            let tile = match cell {
                 '#' => Tile::Wall,
-                'E'|'G' => {
+                'E' | 'G' => {
                     let a = actors.len();
                     let clan = if cell == 'E' { Clan::Elf } else { Clan::Goblin };
                     actors.push(Actor { clan, loc, hp: 200 });
@@ -281,7 +282,7 @@ fn parse_input(input: String) -> World {
             grid[loc] = tile;
         }
     }
-    
+
     World { grid, actors, elf_ap: 3 }
 }
 
@@ -300,9 +301,9 @@ mod test {
 #.....#
 #######
 ");
-        
+
         assert_eq!(
-            solve_part1( parse_input(input)),
+            solve_part1(parse_input(input)),
             27730
         );
     }
@@ -320,7 +321,7 @@ mod test {
 ");
 
         assert_eq!(
-            solve_part2( parse_input(input)),
+            solve_part2(parse_input(input)),
             4988
         );
     }

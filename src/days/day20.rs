@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/20
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::Peekable;

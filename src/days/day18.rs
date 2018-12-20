@@ -1,3 +1,4 @@
+//! Solutions for https://adventofcode.com/2018/day/18
 use std::collections::HashMap;
 
 use day18::Acre::*;

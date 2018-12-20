@@ -1,9 +1,11 @@
+//! Solutions for https://adventofcode.com/2018/day/16
+use std::collections::HashSet;
+
 use regex::Regex;
 
 use days::day16::Op::*;
 use utils::data::load_data;
 use utils::data::non_empty_lines;
-use std::collections::HashSet;
 
 #[allow(dead_code)]
 pub fn part1() {
@@ -105,11 +107,11 @@ fn solve_part2(samples: Vec<InstructionSample>, program: Vec<Instruction>) -> u1
 }
 
 fn remap_opcodes_from_samples(
-    samples: Vec<InstructionSample>, 
-    program: Vec<Instruction>
+    samples: Vec<InstructionSample>,
+    program: Vec<Instruction>,
 ) -> Vec<Instruction> {
     let opcode_mapping = determine_opcode_mapping(samples);
-    
+
     program.into_iter()
         .map(|mut instr| {
             instr.opcode = opcode_mapping[instr.opcode];
@@ -123,7 +125,7 @@ fn determine_opcode_mapping(samples: Vec<InstructionSample>) -> Vec<usize> {
     let mut mapping: Vec<_> = (0..OPS.len())
         .map(|_| (0..OPS.len()).collect::<HashSet<_>>())
         .collect();
-    
+
     // Determine the intersection of possible opcodes for all samples
     for sample in samples {
         let input_opcode = sample.instruction.opcode;
@@ -133,7 +135,7 @@ fn determine_opcode_mapping(samples: Vec<InstructionSample>) -> Vec<usize> {
             .map(|c| *c)
             .collect();
     }
-    
+
     // Now we need to refine the possibilities. Keep looking for the opcode that maps to just one
     // other opcode; this one must be correct. This opcode can then be removed from the other sets.
     loop {
@@ -142,24 +144,24 @@ fn determine_opcode_mapping(samples: Vec<InstructionSample>) -> Vec<usize> {
             .filter(|tup| tup.1.len() > 1)
             .map(|tup| tup.0)
             .collect();
-        
+
         if ambiguous_opcodes.is_empty() {
             // We're done
             break;
         }
-        
+
         // Now find all opcodes that have a one-to-one mapping
         let resolved: HashSet<_> = mapping.iter()
             .filter(|c| c.len() == 1)
             .map(|c| *c.iter().next().unwrap())
             .collect();
-        
+
         // And filter them from the ambiguous codes
         for opcode in ambiguous_opcodes {
             mapping[opcode] = &mapping[opcode] - &resolved;
         }
     }
-    
+
     mapping.into_iter()
         .map(|c| {
             assert_eq!(c.len(), 1);
@@ -236,7 +238,7 @@ mod test {
             1
         );
     }
-    
+
     #[test]
     fn test_count_matching_opcodes() {
         let first = parse_samples(get_test_input()).into_iter().next().unwrap();
