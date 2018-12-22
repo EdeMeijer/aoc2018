@@ -1,33 +1,34 @@
 use std::iter;
 use std::iter::FromIterator;
+
 use utils::data::non_empty_lines;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct Instruction {
-    opcode: String,
-    a: u32,
-    b: u32,
-    target: usize,
+    pub opcode: String,
+    pub a: u32,
+    pub b: u32,
+    pub target: usize,
 }
 
 pub struct Program {
-    num_registers: usize,
-    ip_binding: Option<usize>,
-    instructions: Vec<Instruction>,
+    pub num_registers: usize,
+    pub ip_binding: Option<usize>,
+    pub instructions: Vec<Instruction>,
 }
 
 impl Program {
     pub fn new(instructions: Vec<Instruction>, num_registers: usize) -> Self {
         Program { instructions, num_registers, ip_binding: None }
     }
-    
+
     pub fn bind_ip(mut self, register: usize) -> Self {
         self.ip_binding = Some(register);
         self
     }
 }
 
-type Register = Vec<u32>;
+pub type Register = Vec<u32>;
 
 pub struct VM {
     pub program: Program,
@@ -65,7 +66,18 @@ impl VM {
     }
 }
 
-fn execute_instruction(instr: &Instruction, mut reg: Register) -> Register {
+const OPCODES: [&str; 16] = [
+    "addr", "addi", "mulr", "muli", "banr", "bani", "borr", "bori",
+    "setr", "seti", "gtir", "gtri", "gtrr", "eqir", "eqri", "eqrr",
+];
+
+pub fn get_opcodes() -> Vec<String> {
+    OPCODES.iter()
+        .map(|o| String::from(*o))
+        .collect()
+}
+
+pub fn execute_instruction(instr: &Instruction, mut reg: Register) -> Register {
     let Instruction { ref opcode, a, b, target } = *instr;
 
     let ar = a as usize;
@@ -95,14 +107,25 @@ fn execute_instruction(instr: &Instruction, mut reg: Register) -> Register {
 }
 
 pub fn parse_program(input: String) -> Program {
-    let mut lines = non_empty_lines(input).into_iter();
-    let first = lines.next().unwrap();
+    let mut lines = non_empty_lines(input).into_iter().peekable();
+
+    let has_binding = lines.peek().unwrap().chars().next().unwrap() == '#';
+
+    let binding = if has_binding {
+        Some(parse_ip_binding(lines.next().unwrap()))
+    } else {
+        None
+    };
 
     let instructions = lines
         .map(parse_instruction)
         .collect();
 
-    Program::new(instructions, 6).bind_ip(parse_ip_binding(first))
+    let mut prog = Program::new(instructions, 6);
+    if let Some(b) = binding {
+        prog = prog.bind_ip(b);
+    }
+    prog
 }
 
 fn parse_ip_binding(binding: String) -> usize {
@@ -110,7 +133,7 @@ fn parse_ip_binding(binding: String) -> usize {
     parts[1].parse().unwrap()
 }
 
-fn parse_instruction(instr: String) -> Instruction {
+pub fn parse_instruction(instr: String) -> Instruction {
     let parts: Vec<_> = instr.split(" ").collect();
 
     let opcode = parts[0].to_owned();

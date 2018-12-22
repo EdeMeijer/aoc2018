@@ -1,8 +1,8 @@
 //! Solutions for https://adventofcode.com/2018/day/19
 use utils::data::load_data;
+use utils::elfcode::parse_program;
 use utils::elfcode::Program;
 use utils::elfcode::VM;
-use utils::elfcode::parse_program;
 
 #[allow(dead_code)]
 pub fn part1() {

@@ -1,11 +1,19 @@
 //! Solutions for https://adventofcode.com/2018/day/16
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 use regex::Regex;
 
-use days::day16::Op::*;
 use utils::data::load_data;
 use utils::data::non_empty_lines;
+use utils::elfcode::Instruction;
+use utils::elfcode::parse_instruction;
+use utils::elfcode::parse_program;
+use utils::elfcode::Program;
+use utils::elfcode::Register;
+use utils::elfcode::VM;
+use utils::elfcode::get_opcodes;
+use utils::elfcode::execute_instruction;
 
 #[allow(dead_code)]
 pub fn part1() {
@@ -18,74 +26,10 @@ pub fn part2() {
 }
 
 #[derive(Eq, PartialEq, Debug, Clone)]
-struct Instruction {
-    opcode: usize,
-    a: u16,
-    b: u16,
-    target: usize,
-}
-
-type Register = [u16; 4];
-
-#[derive(Eq, PartialEq, Debug, Clone)]
 struct InstructionSample {
     before: Register,
     instruction: Instruction,
     after: Register,
-}
-
-enum Op {
-    Addr,
-    Addi,
-    Mulr,
-    Muli,
-    Banr,
-    Bani,
-    Borr,
-    Bori,
-    Setr,
-    Seti,
-    Gtir,
-    Gtri,
-    Gtrr,
-    Eqir,
-    Eqri,
-    Eqrr,
-}
-
-const OPS: [Op; 16] = [
-    Addr, Addi, Mulr, Muli, Banr, Bani, Borr, Bori, Setr, Seti, Gtir, Gtri, Gtrr, Eqir, Eqri, Eqrr
-];
-
-fn execute_instruction(instr: &Instruction, mut reg: Register) -> Register {
-    let Instruction { opcode, a, b, target } = *instr;
-
-    let op = &OPS[opcode];
-    let ar = a as usize;
-    let br = b as usize;
-
-    let v = match op {
-        Addr => reg[ar] + reg[br],
-        Addi => reg[ar] + b,
-        Mulr => reg[ar] * reg[br],
-        Muli => reg[ar] * b,
-        Banr => reg[ar] & reg[br],
-        Bani => reg[ar] & b,
-        Borr => reg[ar] | reg[br],
-        Bori => reg[ar] | b,
-        Setr => reg[ar],
-        Seti => a,
-        Gtir => (a > reg[br]) as u16,
-        Gtri => (reg[ar] > b) as u16,
-        Gtrr => (reg[ar] > reg[br]) as u16,
-        Eqir => (a == reg[br]) as u16,
-        Eqri => (reg[ar] == b) as u16,
-        Eqrr => (reg[ar] == reg[br]) as u16,
-    };
-
-    reg[target] = v;
-
-    reg
 }
 
 fn solve_part1(input: Vec<InstructionSample>) -> usize {
@@ -95,54 +39,45 @@ fn solve_part1(input: Vec<InstructionSample>) -> usize {
         .count()
 }
 
-fn solve_part2(samples: Vec<InstructionSample>, program: Vec<Instruction>) -> u16 {
+fn solve_part2(samples: Vec<InstructionSample>, program: Program) -> u32 {
     let program = remap_opcodes_from_samples(samples, program);
-
-    // Run the program
-    let mut reg = [0, 0, 0, 0];
-    for instr in program {
-        reg = execute_instruction(&instr, reg);
-    }
-    reg[0]
+    VM::load(program).execute().register[0]
 }
 
-fn remap_opcodes_from_samples(
-    samples: Vec<InstructionSample>,
-    program: Vec<Instruction>,
-) -> Vec<Instruction> {
+fn remap_opcodes_from_samples(samples: Vec<InstructionSample>, mut program: Program) -> Program {
     let opcode_mapping = determine_opcode_mapping(samples);
-
-    program.into_iter()
-        .map(|mut instr| {
-            instr.opcode = opcode_mapping[instr.opcode];
-            instr
-        })
-        .collect()
+    for instr in program.instructions.iter_mut() {
+        instr.opcode = opcode_mapping[&instr.opcode].clone();
+    }
+    program
 }
 
-fn determine_opcode_mapping(samples: Vec<InstructionSample>) -> Vec<usize> {
+fn determine_opcode_mapping(samples: Vec<InstructionSample>) -> HashMap<String, String> {
     // Initially, any input opcode could map to any internal opcode
-    let mut mapping: Vec<_> = (0..OPS.len())
-        .map(|_| (0..OPS.len()).collect::<HashSet<_>>())
+    let mut mapping: HashMap<_, _> = (0..get_opcodes().len())
+        .map(|a| (a.to_string(), get_opcodes().into_iter().collect::<HashSet<_>>()))
         .collect();
-
+    
     // Determine the intersection of possible opcodes for all samples
     for sample in samples {
-        let input_opcode = sample.instruction.opcode;
+        let input_opcode = sample.instruction.opcode.clone();
         let matches: HashSet<_> = get_matching_opcodes(sample).into_iter().collect();
-        mapping[input_opcode] = mapping[input_opcode]
+
+        let intersected = mapping[&input_opcode]
             .intersection(&matches)
-            .map(|c| *c)
+            .map(|c| c.clone())
             .collect();
+
+        mapping.insert(input_opcode, intersected);
     }
 
     // Now we need to refine the possibilities. Keep looking for the opcode that maps to just one
     // other opcode; this one must be correct. This opcode can then be removed from the other sets.
     loop {
         // First let's check the opcodes that still have multiple candidates to begin with
-        let ambiguous_opcodes: Vec<_> = mapping.iter().enumerate()
+        let ambiguous_opcodes: Vec<_> = mapping.iter()
             .filter(|tup| tup.1.len() > 1)
-            .map(|tup| tup.0)
+            .map(|tup| tup.0.clone())
             .collect();
 
         if ambiguous_opcodes.is_empty() {
@@ -151,30 +86,31 @@ fn determine_opcode_mapping(samples: Vec<InstructionSample>) -> Vec<usize> {
         }
 
         // Now find all opcodes that have a one-to-one mapping
-        let resolved: HashSet<_> = mapping.iter()
+        let resolved: HashSet<_> = mapping.values()
             .filter(|c| c.len() == 1)
-            .map(|c| *c.iter().next().unwrap())
+            .map(|c| c.iter().next().unwrap().clone())
             .collect();
 
         // And filter them from the ambiguous codes
         for opcode in ambiguous_opcodes {
-            mapping[opcode] = &mapping[opcode] - &resolved;
+            let filtered = &mapping[&opcode] - &resolved;
+            mapping.insert(opcode, filtered);
         }
     }
 
     mapping.into_iter()
-        .map(|c| {
-            assert_eq!(c.len(), 1);
-            c.into_iter().next().unwrap()
+        .map(|tup| {
+            assert_eq!(tup.1.len(), 1);
+            (tup.0, tup.1.into_iter().next().unwrap())
         })
         .collect()
 }
 
-fn get_matching_opcodes(sample: InstructionSample) -> Vec<usize> {
-    (0..OPS.len())
+fn get_matching_opcodes(sample: InstructionSample) -> Vec<String> {
+    get_opcodes().into_iter()
         .filter(|opcode| {
             let mut instr = sample.instruction.clone();
-            instr.opcode = *opcode;
+            instr.opcode = opcode.clone();
             let res = execute_instruction(&instr, sample.before.clone());
             res == sample.after
         })
@@ -185,8 +121,8 @@ fn get_puzzle_samples() -> Vec<InstructionSample> {
     parse_samples(load_data("day16_samples"))
 }
 
-fn get_puzzle_program() -> Vec<Instruction> {
-    parse_instructions(load_data("day16_program"))
+fn get_puzzle_program() -> Program {
+    parse_program(load_data("day16_program"))
 }
 
 fn parse_samples(input: String) -> Vec<InstructionSample> {
@@ -204,27 +140,11 @@ fn parse_samples(input: String) -> Vec<InstructionSample> {
     result
 }
 
-fn parse_instructions(input: String) -> Vec<Instruction> {
-    non_empty_lines(input).into_iter()
-        .map(parse_instruction)
-        .collect()
-}
-
 fn parse_register(reg: String) -> Register {
     let re = Regex::new(r"^[^:]+:\s+\[([\d, ]+)]$$").unwrap();
     let cap = re.captures(&reg).unwrap();
-    let reg: Vec<_> = cap[1].split(", ").map(|v| v.parse::<u16>().unwrap()).collect();
-    [reg[0], reg[1], reg[2], reg[3]]
-}
-
-fn parse_instruction(instr: String) -> Instruction {
-    let parts: Vec<_> = instr.split(" ").map(|p| p.parse::<u16>().unwrap()).collect();
-    Instruction {
-        opcode: parts[0] as usize,
-        a: parts[1],
-        b: parts[2],
-        target: parts[3] as usize,
-    }
+    let reg: Vec<_> = cap[1].split(", ").map(|v| v.parse::<u32>().unwrap()).collect();
+    vec![reg[0], reg[1], reg[2], reg[3]]
 }
 
 #[cfg(test)]
@@ -251,14 +171,14 @@ mod test {
     #[test]
     fn test_parse() {
         let expected = InstructionSample {
-            before: [3, 2, 1, 1],
+            before: vec![3, 2, 1, 1],
             instruction: Instruction {
-                opcode: 9,
+                opcode: String::from("9"),
                 a: 2,
                 b: 1,
                 target: 2,
             },
-            after: [3, 2, 2, 1],
+            after: vec![3, 2, 2, 1],
         };
 
         assert_eq!(
