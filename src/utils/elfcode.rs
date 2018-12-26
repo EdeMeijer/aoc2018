@@ -30,16 +30,16 @@ impl Program {
 
 pub type Register = Vec<u64>;
 
-pub struct VM {
+pub struct VM<'b> {
     pub program: Program,
     pub register: Register,
     pub ip: usize,
-    breakpoints: Vec<Breakpoint>,
+    breakpoints: Vec<Breakpoint<'b>>,
 }
 
-pub struct Breakpoint {
+pub struct Breakpoint<'b> {
     line: usize,
-    callback: Box<fn(&State) -> bool>,
+    callback: Box<FnMut(&State) -> bool + 'b>,
 }
 
 pub struct State {
@@ -48,17 +48,17 @@ pub struct State {
     pub num_executed_instructions: usize,
 }
 
-impl VM {
-    pub fn load(program: Program) -> VM {
+impl <'b> VM<'b> {
+    pub fn load(program: Program) -> VM<'b> {
         let register = Vec::from_iter(iter::repeat(0).take(program.num_registers));
         VM { program, register, ip: 0, breakpoints: vec![] }
     }
 
-    pub fn add_breakpoint(&mut self, line: usize, callback: fn(&State) -> bool) {
+    pub fn add_breakpoint(&mut self, line: usize, callback: impl FnMut(&State) -> bool + 'b) {
         self.breakpoints.push(Breakpoint { line, callback: Box::new(callback) });
     }
 
-    pub fn execute(&self) -> State {
+    pub fn execute(&mut self) -> State {
         let prog = &self.program;
 
         let mut register = self.register.clone();
@@ -72,9 +72,9 @@ impl VM {
                 register[b] = ip as u64;
             }
 
-            for bp in self.breakpoints.iter() {
+            for bp in self.breakpoints.iter_mut() {
                 if bp.line == ip {
-                    let c = &bp.callback;
+                    let c = &mut bp.callback;
                     let state = State { register, ip, num_executed_instructions };
                     halt = c(&state);
                     register = state.register;
