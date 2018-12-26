@@ -39,7 +39,7 @@ fn solve_part1(input: Vec<InstructionSample>) -> usize {
         .count()
 }
 
-fn solve_part2(samples: Vec<InstructionSample>, program: Program) -> u32 {
+fn solve_part2(samples: Vec<InstructionSample>, program: Program) -> u64 {
     let program = remap_opcodes_from_samples(samples, program);
     VM::load(program).execute().register[0]
 }
@@ -122,7 +122,7 @@ fn get_puzzle_samples() -> Vec<InstructionSample> {
 }
 
 fn get_puzzle_program() -> Program {
-    parse_program(load_data("day16_program"))
+    parse_program(load_data("day16_program"), 4)
 }
 
 fn parse_samples(input: String) -> Vec<InstructionSample> {
@@ -143,7 +143,7 @@ fn parse_samples(input: String) -> Vec<InstructionSample> {
 fn parse_register(reg: String) -> Register {
     let re = Regex::new(r"^[^:]+:\s+\[([\d, ]+)]$$").unwrap();
     let cap = re.captures(&reg).unwrap();
-    let reg: Vec<_> = cap[1].split(", ").map(|v| v.parse::<u32>().unwrap()).collect();
+    let reg: Vec<_> = cap[1].split(", ").map(|v| v.parse::<u64>().unwrap()).collect();
     vec![reg[0], reg[1], reg[2], reg[3]]
 }
 

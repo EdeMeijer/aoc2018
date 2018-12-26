@@ -11,15 +11,16 @@ pub fn part1() {
 
 #[allow(dead_code)]
 pub fn part2() {
-    println!("Nope, figured it out manually");
+    // Manually decompiled and optimized the program
+    println!("21211200");
 }
 
-fn solve(program: Program) -> u32 {
+fn solve(program: Program) -> u64 {
     VM::load(program).execute().register[0]
 }
 
 fn get_puzzle_input() -> Program {
-    parse_program(load_data("day19"))
+    parse_program(load_data("day19"), 6)
 }
 
 #[cfg(test)]
@@ -29,7 +30,7 @@ mod tests {
     #[test]
     fn test_part1() {
         assert_eq!(
-            solve(parse_program(get_test_input())),
+            solve(parse_program(get_test_input(), 6)),
             6
         );
     }
