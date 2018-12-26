@@ -52,5 +52,6 @@ fn main() {
 //    day20::part2();
 //    day21::part1();
 //    day21::part2();
-    day22::part1();
+//    day22::part1();
+    day22::part2();
 }
