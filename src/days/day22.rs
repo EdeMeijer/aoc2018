@@ -16,7 +16,7 @@ pub fn part2() {
 
 
 fn solve_part1(cave_depth: usize, target: (usize, usize)) -> usize {
-    let risk_levels = get_risk_levels(cave_depth, target);
+    let risk_levels = get_risk_levels(cave_depth, target, target);
 
     let mut risk_level = 0;
     for y in 0..=target.0 {
@@ -33,11 +33,11 @@ fn solve_part2(cave_depth: usize, target: (usize, usize)) -> usize {
     // every cell, that would be (target_x + target_y) * (1 + 7).
     let max_xy = (target.0 + target.1) * (1 + 7);
 
-    let risk_levels = get_risk_levels(cave_depth, (max_xy, max_xy));
+    let risk_levels = get_risk_levels(cave_depth, target, (max_xy, max_xy));
 
     // We'll use dijkstra's algorithm to find the fastest path to the target. Imagine the problem as
     // a 3d grid where we have 3 layers where the layers represent the configurations of tools.
-    // Layer 0 is none, layer 1 is torch and layer 3 is climbing gear. Switching between layers
+    // Layer 0 is none, layer 1 is torch and layer 2 is climbing gear. Switching between layers
     // takes 7 minutes, while switching between x,y coordinates takes 1 minute (but not every move
     // is valid, depending on the layer). We have to end at the target, in layer 1. This gives us
     // a graph with different length edges, so dijkstra's algorithm is perfect here.
@@ -90,7 +90,7 @@ fn solve_part2(cave_depth: usize, target: (usize, usize)) -> usize {
     distances[&target]
 }
 
-fn get_risk_levels(cave_depth: usize, max: (usize, usize)) -> Matrix<usize> {
+fn get_risk_levels(cave_depth: usize, target: (usize, usize), max: (usize, usize)) -> Matrix<usize> {
     let mut erosion_levels = Matrix::new(max.0 + 1, max.1 + 1, 0);
     let mut risk_levels = Matrix::new(max.0 + 1, max.1 + 1, 0);
 
@@ -100,7 +100,7 @@ fn get_risk_levels(cave_depth: usize, max: (usize, usize)) -> Matrix<usize> {
                 (0, 0) => 0,
                 (0, x_) => x_ * 16807,
                 (y_, 0) => y_ * 48271,
-                (y_, x_) => if (y_, x_) == max {
+                (y_, x_) => if (y_, x_) == target {
                     0
                 } else {
                     erosion_levels[(y, x - 1)] * erosion_levels[(y - 1, x)]
@@ -124,6 +124,14 @@ mod test {
         assert_eq!(
             solve_part1(510, (10, 10)),
             114
+        );
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(
+            solve_part2(510, (10, 10)),
+            45
         );
     }
 }
