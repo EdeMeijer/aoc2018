@@ -29,11 +29,12 @@ fn solve_part1(cave_depth: usize, target: (usize, usize)) -> usize {
 
 fn solve_part2(cave_depth: usize, target: (usize, usize)) -> usize {
     // Pre-calculate the risk levels. Since we can go beyond the target x and y, let's set an
-    // upper bound here. Let's assume we use a shortest manhattan distance and have to switch for
-    // every cell, that would be (target_x + target_y) * (1 + 7).
-    let max_xy = (target.0 + target.1) * (1 + 7);
+    // upper bound here.
+    let manhattan = target.0 + target.1;
+    let max_y = ((manhattan * 7 - target.0) as f32 / 2.0).round() as usize + target.0;
+    let max_x = ((manhattan * 7 - target.1) as f32 / 2.0).round() as usize + target.1;
 
-    let risk_levels = get_risk_levels(cave_depth, target, (max_xy, max_xy));
+    let risk_levels = get_risk_levels(cave_depth, target, (max_y, max_x));
 
     // We'll use dijkstra's algorithm to find the fastest path to the target. Imagine the problem as
     // a 3d grid where we have 3 layers where the layers represent the configurations of tools.
